@@ -21,6 +21,7 @@ import AdminBanners from './pages/AdminBanners'
 import AdminCtaSettings from './pages/AdminCtaSettings'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminLogin from './pages/AdminLogin'
+import ResetPassword from './pages/ResetPassword'
 import AdminProductForm from './pages/AdminProductForm'
 import AdminProducts from './pages/AdminProducts'
 import AdminWhatsAppSettings from './pages/AdminWhatsAppSettings'
@@ -137,6 +138,10 @@ export default function App() {
             path="/admin/login"
             element={<AdminLogin />}
           />
+<Route
+  path="/reset-password"
+  element={<ResetPassword />}
+/>
 
           <Route element={<RequireAdmin />}>
             <Route
