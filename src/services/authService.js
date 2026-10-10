@@ -1,49 +1,66 @@
-import { KEYS, read, remove, write } from './storage'
+import { supabase } from './supabase'
 
-/**
- * ─────────────────────────────────────────────────────────────
- *  AUTH DEMO (FRONTEND ONLY)
- *  ⚠️ JANGAN gunakan pola ini untuk produksi.
- *  Autentikasi produksi HARUS dilakukan di backend/API
- *  (password di-hash di server, token/JWT disimpan httpOnly cookie).
- *  File ini hanya contoh struktur agar mudah disambungkan ke API nanti.
- * ─────────────────────────────────────────────────────────────
- */
+export async function login(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
 
-const DEMO_USER = 'admin'
-const SESSION_TTL_MS = 1000 * 60 * 60 * 12 // 12 jam
-
-function simpleHash(text) {
-  let h = 5381
-  for (let i = 0; i < text.length; i += 1) h = ((h << 5) + h + text.charCodeAt(i)) | 0
-  return String(h >>> 0)
-}
-
-// Bukan "password asli": hanya hash demo sederhana untuk keperluan tampilan.
-const DEMO_PASS_HASH = simpleHash('admin123')
-
-export function login(username, password) {
-  if (username === DEMO_USER && simpleHash(password) === DEMO_PASS_HASH) {
-    const session = { user: DEMO_USER, exp: Date.now() + SESSION_TTL_MS }
-    write(KEYS.auth, session)
-    return { ok: true, user: DEMO_USER }
+  if (error || !data.user) {
+    return {
+      ok: false,
+      message: 'Email atau password salah.',
+    }
   }
-  return { ok: false, message: 'Username atau password salah.' }
-}
 
-export function logout() {
-  remove(KEYS.auth)
-}
+  const { data: profile, error: profileError } = await supabase
+    .from('admin_profiles')
+    .select('role')
+    .eq('user_id', data.user.id)
+    .maybeSingle()
 
-export function getSession() {
-  const session = read(KEYS.auth, null)
-  if (!session || !session.exp || session.exp < Date.now()) {
-    remove(KEYS.auth)
-    return null
+  if (profileError || profile?.role !== 'admin') {
+    await supabase.auth.signOut()
+
+    return {
+      ok: false,
+      message: 'Akun ini tidak memiliki akses admin.',
+    }
   }
-  return session
+
+  return {
+    ok: true,
+    user: data.user,
+  }
 }
 
-export function isAuthenticated() {
-  return Boolean(getSession())
+export async function logout() {
+  const { error } = await supabase.auth.signOut()
+  return !error
+}
+
+export async function getSession() {
+  const { data, error } = await supabase.auth.getSession()
+
+  if (error) return null
+
+  return data.session
+}
+
+export async function isAuthenticated() {
+  const session = await getSession()
+
+  if (!session?.user) return false
+
+  const { data: profile, error } = await supabase
+    .from('admin_profiles')
+    .select('role')
+    .eq('user_id', session.user.id)
+    .maybeSingle()
+
+  return !error && profile?.role === 'admin'
+}
+
+export async function isAdmin() {
+  return isAuthenticated()
 }
