@@ -1,5 +1,6 @@
 
 import { useState } from 'react'
+import { supabase } from '../services/supabase'
 import { useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, LockKeyhole } from 'lucide-react'
 import { useToast } from '../context/ToastContext'
@@ -12,6 +13,42 @@ export default function AdminLogin() {
   const [show, setShow] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+const [resetLoading, setResetLoading] = useState(false)
+const [resetMessage, setResetMessage] = useState('')
+
+const resetPassword = async () => {
+  setResetMessage('')
+
+  const cleanEmail = email.trim()
+
+  if (!cleanEmail) {
+    setResetMessage('Masukkan email admin terlebih dahulu.')
+    return
+  }
+
+  setResetLoading(true)
+
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      cleanEmail,
+      {
+        redirectTo: 'https://aruna-store.netlify.app/reset-password',
+      },
+    )
+
+    if (error) {
+      setResetMessage('Gagal mengirim email: ' + error.message)
+    } else {
+      setResetMessage(
+        'Jika email terdaftar, tautan pemulihan akan dikirim. Periksa kotak masuk dan folder Spam.',
+      )
+    }
+  } catch {
+    setResetMessage('Terjadi kesalahan koneksi. Coba lagi nanti.')
+  } finally {
+    setResetLoading(false)
+  }
+}
 
   const navigate = useNavigate()
   const toast = useToast()
@@ -105,7 +142,22 @@ export default function AdminLogin() {
               </button>
             </div>
           </div>
+          <div className="text-right">
+            <button
+              type="button"
+              onClick={resetPassword}
+              disabled={resetLoading}
+              className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 disabled:opacity-60"
+            >
+              {resetLoading ? 'Mengirim email...' : 'Lupa Password?'}
+            </button>
+          </div>
 
+          {resetMessage && (
+            <p role="status" className="rounded-xl bg-indigo-50 px-3 py-2.5 text-sm text-indigo-700">
+              {resetMessage}
+            </p>
+          )}
           {error && (
             <p
               role="alert"
