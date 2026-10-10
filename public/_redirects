@@ -1,0 +1,2 @@
+/* Netlify: redirect SPA agar deep-link (/product/..., /admin) tidak 404 */
+/*  /index.html  200
