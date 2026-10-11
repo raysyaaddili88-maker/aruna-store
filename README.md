@@ -1,4 +1,4 @@
-# Aruna Store — Website Affiliate & Dropship
+# Addili Store — Website Affiliate & Dropship
 
 Website toko online **affiliate & dropship** dengan desain clean, modern, profesional, dan mobile-first (fokus Android). Cocok untuk produk elektronik maupun outfit/fashion. Semua konten (produk, banner, CTA, WhatsApp, pengaturan website) dikelola dari **Dashboard Admin**.
 
